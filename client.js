@@ -15,6 +15,10 @@ local.connect(argv.p, '127.0.0.1', () => {
 remote.pipe(local);
 local.pipe(remote);
 
+remote.on('end', () => {
+    console.log('Remote closed');
+});
+
 local.on('end', () => {
     console.log('Local closed');
     remote.destroy();
