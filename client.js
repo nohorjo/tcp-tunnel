@@ -4,11 +4,11 @@ const { argv } = require('yargs');
 const remote = new net.Socket();
 const local = new net.Socket();
 
-remote.connect(8080, '127.0.0.1', () => {
+remote.connect(argv.r, argv.h, () => {
     console.log('Connected to remote');
 });
 
-local.connect(argv.p, argv.h, () => {
+local.connect(argv.p, '127.0.0.1', () => {
     console.log('Connected to local');
 });
 
