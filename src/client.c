@@ -1,36 +1,23 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h> 
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-void error(char *msg)
+#include "../include/utils.h"
+
+#define LOCAL_HOST "127.0.0.1"
+
+int connect_socket(char *host, int portno)
 {
-    perror(msg);
-    exit(0);
-}
-
-int main(int argc, char *argv[])
-{
-    int sockfd, portno, n;
-
     struct sockaddr_in serv_addr;
+    int sockfd;
     struct hostent *server;
 
-    char buffer[256];
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
-       exit(0);
-    }
-    portno = atoi(argv[2]);
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         error("ERROR opening socket");
-    server = gethostbyname(argv[1]);
+    server = gethostbyname(host);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
@@ -43,16 +30,49 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(portno);
     if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
-    printf("Please enter the message: ");
-    bzero(buffer,256);
-    fgets(buffer,255,stdin);
-    n = write(sockfd,buffer,strlen(buffer));
-    if (n < 0) 
-         error("ERROR writing to socket");
-    bzero(buffer,256);
-    n = read(sockfd,buffer,255);
-    if (n < 0) 
-         error("ERROR reading from socket");
-    printf("%s\n",buffer);
+
+    return sockfd;
+}
+
+// FIXME
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define BUFF_SIZE 1024
+void pipe_fd(int fd_1, int fd_2)
+{
+    char buff[BUFF_SIZE];
+    int n, read_from, write_to;
+    int r_to_g = fork();
+    if (r_to_g == -1) {
+        error("ERROR tunnel fork");
+    } else if (r_to_g) {
+        read_from = fd_1;
+        write_to = fd_2;
+    } else {
+        read_from = fd_2;
+        write_to = fd_1;
+    }
+    while (n = read(read_from, &buff, BUFF_SIZE)) {
+        write(write_to, &buff, n);
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    int sock_fd_remote, sock_fd_local, n;
+
+    char buffer[256];
+    if (argc < 4) {
+       fprintf(stderr,"usage %s hostname port local_port\n", argv[0]);
+       exit(0);
+    }
+    
+    sock_fd_remote = connect_socket(argv[1], atoi(argv[2]));
+    sock_fd_local = connect_socket(LOCAL_HOST, atoi(argv[3]));
+
+    pipe_fd(sock_fd_remote, sock_fd_local);
+
     return 0;
 }

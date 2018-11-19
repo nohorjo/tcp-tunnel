@@ -6,7 +6,7 @@ bin/%: obj/%.o
 	$(CC) $^ -o $@
 
 obj/%.o: src/%.c
-	$(CC) -c -o $@ $<
+	$(CC) -c -o $@ $< -Iinclude -Wall
 
 clean:
 	rm -rf bin/*

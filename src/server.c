@@ -1,31 +1,12 @@
 #include <stdio.h>
-#include <sys/types.h> 
 #include <sys/wait.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#define BUFF_SIZE 1024
-
-void error(char *msg)
-{
-    perror(msg);
-    exit(1);
-}
-
-void tunneller(int fd_tunnel_requester, int fd_tunnel_given)
-{
-    char buff[BUFF_SIZE];
-    int r_to_g = fork();
-    if (r_to_g == -1) {
-        error("ERROR tunnel fork");
-    } else if (r_to_g) {
-        // TODO pipe these
-    }
-}
+#include "../include/utils.h"
 
 int create_server(int portno, int fd, void (*handler)(int, int))
 {
@@ -64,22 +45,34 @@ int create_server(int portno, int fd, void (*handler)(int, int))
     return 0; 
 }
 
-void piper(int IGNORE, int tunnel_requester)
+// FIXME
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define BUFF_SIZE 1024
+void pipe_fd(int fd_1, int fd_2)
 {
-    create_server(0, tunnel_requester, &tunneller);
+    char buff[BUFF_SIZE];
+    int n, read_from, write_to;
+    int r_to_g = fork();
+    if (r_to_g == -1) {
+        error("ERROR tunnel fork");
+    } else if (r_to_g) {
+        read_from = fd_1;
+        write_to = fd_2;
+    } else {
+        read_from = fd_2;
+        write_to = fd_1;
+    }
+    while (n = read(read_from, &buff, BUFF_SIZE)) {
+        write(write_to, &buff, n);
+    }
 }
 
-void new_connection_handler(int newsockfd)
+void piper(int IGNORE, int tunnel_requester)
 {
-
-    int n;
-    char buffer[256];
-    bzero(buffer, 256);
-    n = read(newsockfd, buffer, 255);
-    if (n < 0) error("ERROR reading from socket");
-    printf("Here is the message: %s\n", buffer);
-    n = write(newsockfd, "I got your message", 18);
-    if (n < 0) error("ERROR writing to socket");
+    create_server(0, tunnel_requester, &pipe_fd);
 }
 
 int main(int argc, char *argv[])
