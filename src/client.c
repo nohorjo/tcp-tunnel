@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <netdb.h> 
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,7 +21,7 @@ int connect_socket(char *host, int portno)
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
     }
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    memset(&serv_addr, 0, sizeof serv_addr);
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr, 
          (char *)&serv_addr.sin_addr.s_addr,

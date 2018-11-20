@@ -1,10 +1,9 @@
 #include <stdio.h>
-#include <sys/wait.h>
-#include <netinet/in.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <netinet/in.h>
 
 #include "../include/utils.h"
 
@@ -17,7 +16,7 @@ int create_server(int portno, int fd, void (*handler)(int, int))
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
        error("ERROR opening socket");
-    bzero((char *) &server_socket, sizeof(server_socket));
+    memset(&server_socket, 0, sizeof server_socket);
     server_socket.sin_family = AF_INET;
     server_socket.sin_addr.s_addr = INADDR_ANY;
     server_socket.sin_port = htons(portno);
@@ -46,9 +45,16 @@ int create_server(int portno, int fd, void (*handler)(int, int))
     return 0; 
 }
 
-void piper(int IGNORE, int tunnel_requester)
+void piper(int requester, int newsocket)
 {
-    create_server(0, tunnel_requester, &pipe_fd);
+    if (!pipe_fd(requester, newsocket)) {
+        close(newsocket);
+    }
+}
+
+void init_pipe(int IGNORE, int tunnel_requester)
+{
+    create_server(0, tunnel_requester, &piper);
 }
 
 int main(int argc, char *argv[])
@@ -58,5 +64,5 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    return create_server(atoi(argv[1]), 0, &piper);
+    return create_server(atoi(argv[1]), 0, &init_pipe);
 }
