@@ -10,7 +10,8 @@
 
 int create_server(int portno, int fd, void (*handler)(int, int))
 {
-    int sockfd, newsockfd, clilen;
+    int sockfd, newsockfd;
+    socklen_t clilen;
     struct sockaddr_in server_socket, client_socket;
     int fork_pid;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -43,31 +44,6 @@ int create_server(int portno, int fd, void (*handler)(int, int))
         }
     }
     return 0; 
-}
-
-// FIXME
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#define BUFF_SIZE 1024
-void pipe_fd(int fd_1, int fd_2)
-{
-    char buff[BUFF_SIZE];
-    int n, read_from, write_to;
-    int r_to_g = fork();
-    if (r_to_g == -1) {
-        error("ERROR tunnel fork");
-    } else if (r_to_g) {
-        read_from = fd_1;
-        write_to = fd_2;
-    } else {
-        read_from = fd_2;
-        write_to = fd_1;
-    }
-    while (n = read(read_from, &buff, BUFF_SIZE)) {
-        write(write_to, &buff, n);
-    }
 }
 
 void piper(int IGNORE, int tunnel_requester)

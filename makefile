@@ -1,8 +1,10 @@
 CC=gcc
+DIRS=bin obj
+$(shell mkdir -p $(DIRS))
 
 all: bin/server bin/client
 
-bin/%: obj/%.o
+bin/%: obj/%.o obj/utils.o
 	$(CC) $^ -o $@
 
 obj/%.o: src/%.c
