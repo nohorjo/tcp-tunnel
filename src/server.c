@@ -8,7 +8,7 @@
 
 #include "../include/utils.h"
 
-int create_server(int portno, int fd, void (*handler)(int, int))
+void create_server(int portno, int fd, void (*handler)(int, int))
 {
     int sockfd, newsockfd;
     socklen_t clilen;
@@ -30,7 +30,6 @@ int create_server(int portno, int fd, void (*handler)(int, int))
         perror("getsockname");
     else
         printf("port %d\n", ntohs(server_socket.sin_port));
-    signal(SIGCHLD, SIG_IGN); 
     while (1) {
         clilen = sizeof(client_socket);
         newsockfd = accept(sockfd, (struct sockaddr *) &client_socket, &clilen);
@@ -43,7 +42,6 @@ int create_server(int portno, int fd, void (*handler)(int, int))
             handler(fd, newsockfd);
         }
     }
-    return 0; 
 }
 
 void piper(int requester, int newsocket)
@@ -65,5 +63,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    return create_server(atoi(argv[1]), 0, &init_pipe);
+    signal(SIGCHLD, SIG_IGN); 
+
+    create_server(atoi(argv[1]), 0, &init_pipe);
+    return 0; 
 }

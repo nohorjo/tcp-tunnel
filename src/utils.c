@@ -22,7 +22,7 @@ void error(char *msg)
 int pipe_fd(int fd_1, int fd_2)
 {
     char buff[BUFF_SIZE + 1];
-    int n, read_from, write_to;
+    int n, nn, read_from, write_to;
     int first_to_second = fork();
     char direction[5];
     if (first_to_second == -1) {
@@ -37,15 +37,23 @@ int pipe_fd(int fd_1, int fd_2)
             write_to = fd_1;
             strcpy(direction, "S->F");
         }
-        while ((n = read(read_from, &buff, BUFF_SIZE))) {
+        while ((nn = (n = read(read_from, &buff, BUFF_SIZE)))) {
             if (first_to_second) {
                 printf(RED "%s" RESET, buff);
             } else {
                 printf(GREEN "%s" RESET, buff);
             }
+            for (int i = n - 1; i; i--) {
+                if (buff[i] == 0x04) {
+                    --n;
+                }
+            }
             write(write_to, &buff, n);
+            if (n != nn) goto OUTER;
             memset(buff, 0, sizeof buff);
         }
+        OUTER:
+        write(write_to, "\x04", 1);
         printf("PIPE END %s\n", direction);
     }
     return first_to_second;

@@ -2,6 +2,8 @@
 #include <netdb.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "../include/utils.h"
 
@@ -41,11 +43,14 @@ int main(int argc, char *argv[])
        fprintf(stderr,"usage %s hostname port local_port\n", argv[0]);
        exit(0);
     }
+
+    signal(SIGCHLD, SIG_IGN); 
     
     sock_fd_remote = connect_socket(argv[1], atoi(argv[2]));
-    sock_fd_local = connect_socket(LOCAL_HOST, atoi(argv[3]));
 
-    pipe_fd(sock_fd_remote, sock_fd_local);
+    do {
+        sock_fd_local = connect_socket(LOCAL_HOST, atoi(argv[3]));
+    } while (!pipe_fd(sock_fd_remote, sock_fd_local) && !close(sock_fd_local));
 
     return 0;
 }
