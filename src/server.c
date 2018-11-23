@@ -44,9 +44,9 @@ void create_server(int portno, int fd, void (*handler)(int, int))
     }
 }
 
-void piper(int requester, int newsocket)
+void piper(int target, int newsocket)
 {
-    if (!pipe_fd(requester, newsocket)) {
+    if (!pipe_fd(target, newsocket, "target", "newsocket")) {
         close(newsocket);
     }
 }

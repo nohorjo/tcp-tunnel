@@ -13,29 +13,31 @@
 #define CYAN    "\x1b[36m"
 #define RESET   "\x1b[0m"
 
+#define max(x,y) ((x) >= (y)) ? (x) : (y)
+
 void error(char *msg)
 {
     perror(msg);
     exit(1);
 }
 
-int pipe_fd(int fd_1, int fd_2)
+int pipe_fd(int fd_1, int fd_2, char *f1name, char *f2name)
 {
     char buff[BUFF_SIZE + 1];
     int n, nn, read_from, write_to;
     int first_to_second = fork();
-    char direction[5];
+    char direction[max(strlen(f1name), strlen(f2name))];
     if (first_to_second == -1) {
         error("ERROR tunnel fork");
     } else {
         if (first_to_second) {
             read_from = fd_1;
             write_to = fd_2;
-            strcpy(direction, "F->S");
+            strcpy(direction, f1name);
         } else {
             read_from = fd_2;
             write_to = fd_1;
-            strcpy(direction, "S->F");
+            strcpy(direction, f2name);
         }
         while ((nn = (n = read(read_from, &buff, BUFF_SIZE)))) {
             if (first_to_second) {

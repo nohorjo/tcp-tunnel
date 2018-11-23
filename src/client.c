@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     do {
         sock_fd_local = connect_socket(LOCAL_HOST, atoi(argv[3]));
-    } while (!pipe_fd(sock_fd_remote, sock_fd_local) && !close(sock_fd_local));
+    } while (!pipe_fd(sock_fd_remote, sock_fd_local, "remote", "local") && !close(sock_fd_local));
 
     return 0;
 }
